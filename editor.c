@@ -15,7 +15,7 @@ void enable_raw_mode()
     atexit(disable_raw_mode); // executes when the main function returns
 
     struct termios raw = orig_termios;
-    raw.c_lflag &= ~(ECHO);
+    raw.c_lflag &= ~(ECHO | ICANON);
     tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
 }
 
