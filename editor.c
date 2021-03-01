@@ -1,3 +1,4 @@
+/*** includes ***/
 #include <stdio.h>
 #include <errno.h>
 #include <ctype.h>
@@ -5,10 +6,13 @@
 #include <termios.h>
 #include <unistd.h>
 
+/*** define ***/
 #define CTRL_KEY(k) ((k)&0x1f)
 
+/*** data ***/
 struct termios orig_termios;
 
+/*** terminal ***/
 void die(const char *s)
 {
     perror(s);
@@ -64,6 +68,7 @@ void editor_process_keypress()
     }
 }
 
+/*** init ***/
 int main()
 {
     enable_raw_mode();
