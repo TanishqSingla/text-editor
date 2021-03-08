@@ -10,14 +10,17 @@
 
 /*** define ***/
 #define CTRL_KEY(k) ((k)&0x1f)
+#define ABUF_INIT \
+    {             \
+        NULL, 0   \
+    }
 
 /*** data ***/
-typedef struct
+typedef struct editorConfig
 {
     int screenrows;
     int screencols;
     struct termios orig_termios;
-    jkkkkkkkkkkkkkkkkkkkkjk
 } editorConfig;
 
 editorConfig E;
@@ -69,30 +72,58 @@ char editor_read_key()
     return c;
 }
 
+/*** append buffer ***/
+struct abuf
+{
+    char *b;
+    int len;
+};
+
+void abAppend(struct abuf *ab, const char *s, int len)
+{
+    char *new = realloc(ab->b, ab->len + len);
+
+    if (new == NULL)
+        return;
+    memcpy(&new[ab->len], s, len);
+    ab->b = new;
+    ab->len += len;
+}
+
+void abFree(struct abuf *ab)
+{
+    free(ab->b);
+}
+
 /*** output ***/
 
-void editor_draw_rows()
+void editor_draw_rows(struct abuf *ab)
 {
     int y;
     for (y = 0; y < E.screenrows; y++)
     {
-        write(STDOUT_FILENO, "~", 1);
+        abAppend(ab, "~", 1);
 
         if (y < E.screenrows - 1)
         {
-            write(STDOUT_FILENO, "\r\n", 2);
+            abAppend(ab, "\r\n", 2);
         }
     }
 }
 
 void editor_refresh_screen()
 {
-    write(STDOUT_FILENO, "\x1b[2J", 4);
-    write(STDOUT_FILENO, "\x1b[H", 3);
+    struct abuf ab = ABUF_INIT;
 
-    editor_draw_rows();
+    abAppend(&ab, "\x1b[2J", 4);
+    abAppend(&ab, "\x1b[H", 3);
+
+    editor_draw_rows(&ab);
     // Repositioning the cursor to top left
-    write(STDOUT_FILENO, "\x1b[H", 3);
+    abAppend(&ab, "\x1b[H", 3);
+
+    write(STDOUT_FILENO, ab.b, ab.len);
+    abFree(&ab);
 }
 
 int getCursorPosition(int *rows, int *cols)
@@ -120,7 +151,7 @@ int getCursorPosition(int *rows, int *cols)
     if (sscanf(&buf[2], "%d;%d", rows, cols) != 2) // if the number of argument is not 2 then return error
         return -1;
 
-    return -0;
+    return 0;
 }
 
 int getWindowSize(int *rows, int *cols)
@@ -139,34 +170,6 @@ int getWindowSize(int *rows, int *cols)
         *rows = ws.ws_row;
         return 0;
     }
-}
-
-/*** append buffer ***/
-struct abuf
-{
-    char *b;
-    int len;
-};
-
-#define ABUF_INIT \
-    {             \
-        NULL, 0   \
-    }
-
-void abAppend(struct abuf *ab, const char *s, int len)
-{
-    char *new = realloc(ab->b, ab->len + len);
-
-    if (new == NULL)
-        return;
-    memcpy(&new[ab->len], s, len);
-    ab->b = new;
-    ab->len += len;
-}
-
-void abFree(struct abuf *ab)
-{
-    free(ab->b);
 }
 
 /*** input ***/
