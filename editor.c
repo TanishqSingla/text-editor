@@ -15,6 +15,8 @@
         NULL, 0   \
     }
 
+#define TEXT_EDITOR_VERSION "0.0.1"
+
 /*** data ***/
 typedef struct editorConfig
 {
@@ -102,8 +104,19 @@ void editor_draw_rows(struct abuf *ab)
     int y;
     for (y = 0; y < E.screenrows; y++)
     {
-        abAppend(ab, "~", 1);
+        if (y == E.screenrows / 3)
+        {
+            char welcome[80];
+            int welcome_len = snprintf(welcome, sizeof(welcome), "Text Editor -- version %s", TEXT_EDITOR_VERSION);
 
+            if (welcome_len > E.screencols)
+                welcome_len = E.screencols;
+            abAppend(ab, welcome, welcome_len);
+        }
+        else
+        {
+            abAppend(ab, "~", 1);
+        }
         abAppend(ab, "\x1b[K", 3);
         if (y < E.screenrows - 1)
         {
