@@ -111,6 +111,14 @@ void editor_draw_rows(struct abuf *ab)
 
             if (welcome_len > E.screencols)
                 welcome_len = E.screencols;
+            int padding = (E.screencols - welcome_len) / 2;
+            if (padding)
+            {
+                abAppend(ab, "~", 1);
+                padding--;
+            }
+            while (padding--)
+                abAppend(ab, " ", 1);
             abAppend(ab, welcome, welcome_len);
         }
         else
