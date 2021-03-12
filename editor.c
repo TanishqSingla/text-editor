@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
+#include <sys/types.h>
 #include <termios.h>
 #include <unistd.h>
 
@@ -23,6 +24,7 @@ enum editorKey
     ARROW_RIGHT,
     ARROW_UP,
     ARROW_DOWN,
+    DEL_KEY,
     PAGE_UP,
     PAGE_DOWN,
     HOME_KEY,
@@ -30,11 +32,19 @@ enum editorKey
 };
 
 /*** data ***/
+typedef struct erow
+{
+    int size;
+    char *chars;
+} erow;
+
 typedef struct editorConfig
 {
     int cx, cy;
     int screenrows;
     int screencols;
+    int numrows;
+    erow row;
     struct termios orig_termios;
 } editorConfig;
 
@@ -106,6 +116,8 @@ int editor_read_key()
                     {
                     case '1':
                         return HOME_KEY;
+                    case '3':
+                        return DEL_KEY;
                     case '4':
                         return END_KEY;
                     case '5':
@@ -155,6 +167,21 @@ int editor_read_key()
     {
         return c;
     }
+}
+
+/*** file i/o ***/
+
+// testing by showing hello world to editor
+void editorOpen()
+{
+    char *line = "Hello World";
+    ssize_t linelen = 13;
+
+    E.row.size = linelen;
+    E.row.chars = malloc(linelen + 1);
+    memcpy(E.row.chars, line, linelen);
+    E.row.chars[linelen] = '\0';
+    E.numrows = 1;
 }
 
 /*** append buffer ***/
@@ -320,7 +347,7 @@ void editor_process_keypress()
         E.cx = 0;
         break;
     case END_KEY:
-        E.cy = E.screencols - 1;
+        E.cx = E.screencols - 1;
         break;
     case PAGE_UP:
     case PAGE_DOWN:
@@ -344,6 +371,7 @@ void initEditor()
 {
     E.cx = 0;
     E.cy = 0;
+    E.numrows = 0;
     if (getWindowSize(&E.screenrows, &E.screencols) == -1)
         die("getWindowSize");
 }
