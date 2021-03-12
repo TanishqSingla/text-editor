@@ -292,6 +292,14 @@ void editor_process_keypress()
         write(STDOUT_FILENO, "\x1b[H", 3);
         exit(0);
         break;
+    case PAGE_UP:
+    case PAGE_DOWN:
+    {
+        int times = E.screenrows;
+        while (times--)
+            editor_move_cursor(c == PAGE_UP ? ARROW_UP : ARROW_DOWN);
+    }
+    break;
     case ARROW_UP:
     case ARROW_LEFT:
     case ARROW_DOWN:
@@ -321,4 +329,3 @@ int main()
         editor_process_keypress();
     }
     return 0;
-}
