@@ -1,3 +1,7 @@
+#define _DEFAULT_SOURCE
+#define _BSD_SOURCE
+#define _GNU_SOURCE
+
 /*** includes ***/
 #include <stdio.h>
 #include <errno.h>
@@ -8,10 +12,6 @@
 #include <sys/types.h>
 #include <termios.h>
 #include <unistd.h>
-
-#define _DEFAULT_SOURCE
-#define _BSD_SOURCE
-#define _GNU_SOURCE
 
 /*** define ***/
 #define CTRL_KEY(k) ((k)&0x1f)
