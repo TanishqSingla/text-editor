@@ -9,6 +9,10 @@
 #include <termios.h>
 #include <unistd.h>
 
+#define _DEFAULT_SOURCE
+#define _BSD_SOURCE
+#define _GNU_SOURCE
+
 /*** define ***/
 #define CTRL_KEY(k) ((k)&0x1f)
 #define ABUF_INIT \
@@ -231,7 +235,7 @@ void editor_draw_rows(struct abuf *ab)
     {
         if (y >= E.numrows)
         {
-            if (y == E.screenrows / 3)
+            if (E.numrows == 0 && y == E.screenrows / 3)
             {
                 char welcome[80];
                 int welcome_len = snprintf(welcome, sizeof(welcome), "Text Editor -- version %s", TEXT_EDITOR_VERSION);
