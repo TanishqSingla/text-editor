@@ -174,7 +174,7 @@ int editor_read_key()
 // testing by showing hello world to editor
 void editorOpen()
 {
-    char *line = "Hello World";
+    char *line = "Hello World!";
     ssize_t linelen = 13;
 
     E.row.size = linelen;
@@ -214,26 +214,36 @@ void editor_draw_rows(struct abuf *ab)
     int y;
     for (y = 0; y < E.screenrows; y++)
     {
-        if (y == E.screenrows / 3)
+        if (y >= E.numrows)
         {
-            char welcome[80];
-            int welcome_len = snprintf(welcome, sizeof(welcome), "Text Editor -- version %s", TEXT_EDITOR_VERSION);
+            if (y == E.screenrows / 3)
+            {
+                char welcome[80];
+                int welcome_len = snprintf(welcome, sizeof(welcome), "Text Editor -- version %s", TEXT_EDITOR_VERSION);
 
-            if (welcome_len > E.screencols)
-                welcome_len = E.screencols;
-            int padding = (E.screencols - welcome_len) / 2;
-            if (padding)
+                if (welcome_len > E.screencols)
+                    welcome_len = E.screencols;
+                int padding = (E.screencols - welcome_len) / 2;
+                if (padding)
+                {
+                    abAppend(ab, "~", 1);
+                    padding--;
+                }
+                while (padding--)
+                    abAppend(ab, " ", 1);
+                abAppend(ab, welcome, welcome_len);
+            }
+            else
             {
                 abAppend(ab, "~", 1);
-                padding--;
             }
-            while (padding--)
-                abAppend(ab, " ", 1);
-            abAppend(ab, welcome, welcome_len);
         }
         else
         {
-            abAppend(ab, "~", 1);
+            int len = E.row.size;
+            if (len > E.screencols)
+                len = E.screencols;
+            abAppend(ab, E.row.chars, len);
         }
         abAppend(ab, "\x1b[K", 3);
         if (y < E.screenrows - 1)
@@ -380,6 +390,7 @@ int main()
 {
     enable_raw_mode();
     initEditor();
+    editorOpen();
 
     while (1)
     {
