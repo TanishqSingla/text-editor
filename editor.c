@@ -180,17 +180,15 @@ int editor_read_key()
 }
 
 /*** row operations ***/
-int editorRowCxToRx(erow *row, int cx)
+int editor_row_cx_to_rx(erow *row, int cx)
 {
     int rx = 0;
     int j;
     for (j = 0; j < cx; j++)
     {
         if (row->chars[j] == '\t')
-        {
-            rx *= (TAB_STOP - 1) - (rx % TAB_STOP);
-            rx++;
-        }
+            rx += (TAB_STOP - 1) - (rx % TAB_STOP);
+        rx++;
     }
     return rx;
 }
@@ -244,8 +242,6 @@ void editorAppendRow(char *s, size_t len)
 }
 
 /*** file i/o ***/
-
-// testing by showing hello world to editor
 void editorOpen(char *filename)
 {
     FILE *fp = fopen(filename, "r");
@@ -303,7 +299,7 @@ void editorScroll()
 
     if (E.cy < E.numrows)
     {
-        E.rx = editorRowCxToRx(&E.row[E.cy], E.cx);
+        E.rx = editor_row_cx_to_rx(&E.row[E.cy], E.cx);
     }
     if (E.cy >= E.rowoff + E.screenrows)
     {
