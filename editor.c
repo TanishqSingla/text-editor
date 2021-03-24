@@ -3,9 +3,10 @@
 #define _GNU_SOURCE
 
 /*** includes ***/
-#include <stdio.h>
-#include <errno.h>
 #include <ctype.h>
+#include <errno.h>
+#include <stdio.h>
+#include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
@@ -57,6 +58,8 @@ typedef struct editorConfig
     int numrows;
     erow *row;
     char *filename;
+    char statusmsg[80];
+    time_t status_time;
     struct termios orig_termios;
 } editorConfig;
 
@@ -391,6 +394,17 @@ void editor_draw_status_bar(struct abuf *ab)
         }
     }
     abAppend(ab, "\x1b[m", 3);
+    abAppend(ab, "\r\n", 2);
+}
+
+void editor_draw_message_bar(struct abuf *ab)
+{
+    abAppend(ab, "\x1b[K", 3);
+    int msglen = strlen(E.statusmsg);
+    if (msglen > E.screencols)
+        msglen = E.screencols;
+    if (msglen && time(NULL) - E.status_time < 5)
+        abAppend(ab, E.statusmsg, msglen);
 }
 
 void editor_refresh_screen()
@@ -404,6 +418,7 @@ void editor_refresh_screen()
 
     editor_draw_rows(&ab);
     editor_draw_status_bar(&ab);
+    editor_draw_message_bar(&ab);
 
     char buf[32];
     snprintf(buf, sizeof(buf), "\x1b[%d;%dH", (E.cy - E.rowoff) + 1, (E.rx - E.coloff) + 1);
@@ -413,6 +428,15 @@ void editor_refresh_screen()
 
     write(STDOUT_FILENO, ab.b, ab.len);
     abFree(&ab);
+}
+
+void editorSetStatusMessage(const char *fmt, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    vsnprintf(E.statusmsg, sizeof(E.statusmsg), fmt, ap);
+    va_end(ap);
+    E.status_time = time(NULL);
 }
 
 int getCursorPosition(int *rows, int *cols)
@@ -565,9 +589,11 @@ void initEditor()
     E.coloff = 0;
     E.row = NULL;
     E.filename = NULL;
+    E.statusmsg[0] = '\0';
+    E.status_time = 0;
     if (getWindowSize(&E.screenrows, &E.screencols) == -1)
         die("getWindowSize");
-    E.screenrows -= 1;
+    E.screenrows -= 2;
 }
 
 int main(int argc, char *argv[])
@@ -578,6 +604,8 @@ int main(int argc, char *argv[])
     {
         editorOpen(argv[1]);
     }
+
+    editorSetStatusMessage("Help: CTRL-Q = quit");
 
     while (1)
     {
