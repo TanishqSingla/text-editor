@@ -309,6 +309,10 @@ void editorScroll()
     {
         E.rx = editor_row_cx_to_rx(&E.row[E.cy], E.cx);
     }
+    if (E.cy < E.rowoff)
+    {
+        E.rowoff = E.cy;
+    }
     if (E.cy >= E.rowoff + E.screenrows)
     {
         E.rowoff = E.cy - E.screenrows + 1;
