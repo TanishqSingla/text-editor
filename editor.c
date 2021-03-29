@@ -27,6 +27,7 @@
 
 enum editorKey
 {
+    BACKSPACE = 127,
     ARROW_LEFT = 1000,
     ARROW_RIGHT,
     ARROW_UP,
@@ -560,6 +561,9 @@ void editor_process_keypress()
 
     switch (c)
     {
+    case '\r':
+        /* todo */
+        break;
     case CTRL_KEY('q'):
         write(STDOUT_FILENO, "\x1b[2J", 4);
         write(STDOUT_FILENO, "\x1b[H", 3);
@@ -572,30 +576,17 @@ void editor_process_keypress()
         if (E.cy < E.numrows)
             E.cx = E.row[E.cy].size;
         break;
-    case PAGE_UP:
-    case PAGE_DOWN:
-    {
-        if (c == PAGE_UP)
-        {
-            E.cy = E.rowoff;
-        }
-        else if (c == PAGE_DOWN)
-        {
-            E.cy = E.rowoff + E.screenrows - 1;
-            if (E.cy > E.numrows)
-                E.cy = E.numrows;
-        }
-
-        int times = E.screenrows;
-        while (times--)
-            editor_move_cursor(c == PAGE_UP ? ARROW_UP : ARROW_DOWN);
-    }
-    break;
-    case ARROW_UP:
-    case ARROW_LEFT:
-    case ARROW_DOWN:
+    case BACKSPACE:
+    case CTRL_KEY('h'):
+    case DEL_KEY:
+        // TODO
+        break;
     case ARROW_RIGHT:
         editor_move_cursor(c);
+        break;
+
+    case CTRL_KEY('l'):
+    case '\x1b':
         break;
 
     default:
