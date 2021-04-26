@@ -424,9 +424,10 @@ void editor_save()
 {
     if (E.filename == NULL)
     {
-        E.filename = editor_prompt("Save as: %s (ESC to cancel)");
+        E.filename = editor_prompt("Save as: %s (ESC to cancel)", NULL);
         if (E.filename == NULL)
         {
+            E.filename = editor_prompt("Save as: %s (ESC to cancel)", NULL);
             editorSetStatusMessage("Save aborted");
             return;
         }
@@ -459,7 +460,7 @@ void editor_save()
 
 void editor_find()
 {
-    char *query = editor_prompt("Search: %s (ESC to cancel)");
+    char *query = editor_prompt("Search: %s (ESC to cancel)", NULL);
     if (query == NULL)
         return;
 
