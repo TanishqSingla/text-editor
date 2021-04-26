@@ -458,10 +458,9 @@ void editor_save()
 
 /*** find ***/
 
-void editor_find()
+void editor_find_callback(char *query, int key)
 {
-    char *query = editor_prompt("Search: %s (ESC to cancel)", NULL);
-    if (query == NULL)
+    if (key == '\r' || key == '\x1b')
         return;
 
     int i;
@@ -478,6 +477,13 @@ void editor_find()
             break;
         }
     }
+}
+
+void editor_find()
+{
+    char *query = editor_prompt("Search: %s (ESC to cancel)", editor_find_callback);
+    if (query)
+        free(query);
 }
 
 /*** append buffer ***/
