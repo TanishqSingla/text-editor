@@ -72,7 +72,7 @@ editorConfig E;
 /*** prototypes ***/
 void editorSetStatusMessage(const char *fmt, ...);
 void editor_refresh_screen();
-char *editor_prompt(char *prompt);
+char *editor_prompt(char *prompt, void (*callback)(char *, int));
 
 /*** terminal ***/
 void die(const char *s)
@@ -205,6 +205,22 @@ int editor_row_cx_to_rx(erow *row, int cx)
         rx++;
     }
     return rx;
+}
+
+int editor_row_rx_to_cx(erow *row, int rx)
+{
+    int cur_rx = 0;
+    int cx;
+    for (cx = 0; row->size; cx++)
+    {
+        if (row->chars[cx] == '\t')
+            cur_rx += (TAB_STOP - 1) - (cur_rx % TAB_STOP);
+        cur_rx++;
+
+        if (cur_rx > rx)
+            return cx;
+    }
+    return cx;
 }
 
 void editor_update_row(erow *row)
@@ -456,7 +472,7 @@ void editor_find()
         if (match)
         {
             E.cy = i;
-            E.cx = match - row->render;
+            E.cx = editor_row_rx_to_cx(row, match - row->render);
             E.rowoff = E.numrows;
             break;
         }
@@ -677,7 +693,7 @@ int getWindowSize(int *rows, int *cols)
 }
 
 /*** input ***/
-char *editor_prompt(char *prompt)
+char *editor_prompt(char *prompt, void (*callback)(char *, int))
 {
     size_t bufsize = 128;
     char *buf = malloc(bufsize);
@@ -699,6 +715,8 @@ char *editor_prompt(char *prompt)
         else if (c == '\x1b')
         {
             editorSetStatusMessage("");
+            if (callback)
+                callback(buf, c);
             free(buf);
             return NULL;
         }
@@ -707,6 +725,8 @@ char *editor_prompt(char *prompt)
             if (buflen != 0)
             {
                 editorSetStatusMessage("");
+                if (callback)
+                    callback(buf, c);
                 return buf;
             }
         }
@@ -720,6 +740,9 @@ char *editor_prompt(char *prompt)
             buf[buflen++] = c;
             buf[buflen] = '\0';
         }
+
+        if (callback)
+            callback(buf, c);
     }
 }
 
@@ -805,6 +828,10 @@ void editor_process_keypress()
         if (E.cy < E.numrows)
             E.cx = E.row[E.cy].size;
         break;
+
+    case CTRL_KEY('f'):
+        editor_find();
+        break;
     case BACKSPACE:
     case CTRL_KEY('h'):
     case DEL_KEY:
@@ -860,7 +887,7 @@ int main(int argc, char *argv[])
         editorOpen(argv[1]);
     }
 
-    editorSetStatusMessage("HELP: CTRL-S = save | CTRL-Q = quit");
+    editorSetStatusMessage("HELP: CTRL-S = save | CTRL-Q = quit | CTRL-F = find");
 
     while (1)
     {
